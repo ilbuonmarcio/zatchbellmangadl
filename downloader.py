@@ -6,10 +6,22 @@ import ntpath
 from pathlib import Path
 import os
 import json
+import multiprocessing
 
 
 INVALID_CHAR_FILENAME_FILTER = '<>:"/\|?*. '
 BASE_URL = "https://mangakakalot.com/chapter/konjiki_no_gash/chapter_"
+
+
+def download_image(image_url, chapter_save_path):
+    print(f"Dowloading from {image_url}", end=" ")
+    image = requests.get(image_url)
+    image_name = ntpath.basename(image_url)
+    image_buffer = image.content
+    
+    with open(chapter_save_path + image_name, 'wb') as output_file:
+        output_file.write(image_buffer)
+    print("Done!")
 
 
 if __name__ == "__main__":
@@ -73,12 +85,11 @@ if __name__ == "__main__":
         Path(chapter_save_path).mkdir(exist_ok=True)
         print(f"Created folder {chapter_save_path}")
 
+        process_pool = []
         for image_url in image_urls:
-            print(f"Dowloading from {image_url}", end=" ")
-            image = requests.get(image_url)
-            image_name = ntpath.basename(image_url)
-            image_buffer = image.content
+            p = multiprocessing.Process(target=download_image, args=(image_url, chapter_save_path))
+            p.start()
             
-            with open(chapter_save_path + image_name, 'wb') as output_file:
-                output_file.write(image_buffer)
-            print("Done!")
+            process_pool.append(p)
+
+        [p.join() for p in process_pool]
