@@ -8,7 +8,7 @@ import os
 import json
 
 
-INVALID_CHAR_FILENAME_FILTER = '<>:"/\|?* '
+INVALID_CHAR_FILENAME_FILTER = '<>:"/\|?*. '
 BASE_URL = "https://mangakakalot.com/chapter/konjiki_no_gash/chapter_"
 
 
@@ -65,8 +65,10 @@ if __name__ == "__main__":
         # Check if already downloaded
         # If already downloaded, skip to next one
         if Path(chapter_save_path).is_dir():
-            if len([f[2] for f in os.walk(chapter_save_path)][0]) == len(chapter[2]):
+            files = [f[2] for f in os.walk(chapter_save_path)]
+            if len(files) > 0 and len(files[0]) == len(chapter[2]):
                 print(f"Folder {chapter_save_path} already downloaded entirely, skipping...")
+                continue
 
         Path(chapter_save_path).mkdir(exist_ok=True)
         print(f"Created folder {chapter_save_path}")
