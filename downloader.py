@@ -44,7 +44,7 @@ if __name__ == "__main__":
             chapter_images_urls = [elem['src'] for elem in soup.find('div', {'id': 'vungdoc'}).findChildren('img')]
             chapter.append(chapter_images_urls)
 
-            time.sleep(1)
+            time.sleep(0.5)
 
         with open('chapter_cache.json', 'w') as output_file:
             output_file.write(json.dumps(chapters))
@@ -59,7 +59,6 @@ if __name__ == "__main__":
     Path('Downloads').mkdir(exist_ok=True)
 
     for chapter in chapters:
-        print(chapter)
         image_urls = chapter[2]
         chapter_save_path = 'Downloads/' + chapter[1] + '/'
 
