@@ -3,3 +3,13 @@ venv/
 Downloads/
 Augmented/
 chapter_cache.json
+models-cunet/
+models-upconv_7_anime_style_art_rgb/
+models-upconv_7_photo/
+msvcp140.dll
+readme.txt
+vcomp140.dll
+vcruntime140.dll
+vulkan-1.dll
+waifu2x-ncnn-vulkan-fp16p.exe
+waifu2x-ncnn-vulkan.exe
