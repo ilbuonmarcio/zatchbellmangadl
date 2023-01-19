@@ -1,16 +1,19 @@
 import requests
 import bs4
-from pprint import pprint
-import time
 import ntpath
 from pathlib import Path
 import os
-import json
-import multiprocessing
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.by import By
+from selenium.webdriver.firefox.options import Options
 
+options = Options()
+options.headless = True
+driver = webdriver.Firefox(options=options)
 
 INVALID_CHAR_FILENAME_FILTER = '<>:"/\|?*. '
-BASE_URL = "https://mangakakalot.com/chapter/konjiki_no_gash/chapter_"
+BASE_URL = "https://mangakakalot.com/chapter/gc894419/chapter_"
 
 
 def download_image(image_url, chapter_save_path):
@@ -25,71 +28,43 @@ def download_image(image_url, chapter_save_path):
 
 
 if __name__ == "__main__":
-    # Check if chapter_cache.json exists
-    # If not, download and create a new one
-    if not Path('chapter_cache.json').is_file():
-        print("Cache file not available, creating new one...")
-
-        # Getting all chapters list from page 1
-        first_page = requests.get(BASE_URL + "1").content
-        soup = bs4.BeautifulSoup(first_page, 'html.parser')
-        
-        # Getting all chapter IDs and titles
-        chapters = [
-            [elem['value'], elem.contents[0]]
-            for elem in soup.find('select', {'id': 'c_chapter'}).findChildren('option')
-        ]
-
-        for chapter in chapters:
-            for invalid_char in INVALID_CHAR_FILENAME_FILTER:
-                chapter[1] = chapter[1].replace(invalid_char, '_')
-
-        for chapter in chapters:
-            chapter_id = chapter[0]
-            chapter_title = chapter[1]
-
-            print(f"[ID:{chapter_id}] Getting image url list for {chapter_title}")
-
-            page = requests.get(BASE_URL + chapter_id).content
-            soup = bs4.BeautifulSoup(page, "html.parser")
-
-            chapter_images_urls = [elem['src'] for elem in soup.find('div', {'id': 'vungdoc'}).findChildren('img')]
-            chapter.append(chapter_images_urls)
-
-            time.sleep(0.5)
-
-        with open('chapter_cache.json', 'w') as output_file:
-            output_file.write(json.dumps(chapters))
+    # Getting all chapters list from page 1
+    first_page = requests.get(BASE_URL + "1").content
+    soup = bs4.BeautifulSoup(first_page, 'html.parser')
     
-    else:
-        print("Reading chapters from cache file...")
-
-        chapters = None
-        with open('chapter_cache.json', 'r') as input_file:
-            chapters = json.loads("".join(input_file.readlines()))
-
-    Path('Downloads').mkdir(exist_ok=True)
+    # Getting all chapter IDs and titles
+    chapters = [
+        [elem['data-c'], elem.contents[0]]
+        for elem in soup.find('select', {'class': 'navi-change-chapter'}).findChildren('option')
+    ]
 
     for chapter in chapters:
-        image_urls = chapter[2]
+        for invalid_char in INVALID_CHAR_FILENAME_FILTER:
+            chapter[1] = chapter[1].replace(invalid_char, '_')
+
+    Path('Downloads').mkdir(exist_ok=True)
+    print(f"Found {len(chapters)} in website!")
+    for chapter in chapters:
         chapter_save_path = 'Downloads/' + chapter[1] + '/'
 
         # Check if already downloaded
         # If already downloaded, skip to next one
         if Path(chapter_save_path).is_dir():
-            files = [f[2] for f in os.walk(chapter_save_path)]
-            if len(files) > 0 and len(files[0]) == len(chapter[2]):
-                print(f"Folder {chapter_save_path} already downloaded entirely, skipping...")
+            files = [f[2] for f in os.walk(chapter_save_path) if len(f[2]) > 0]
+            if len(files) > 0:
+                print(f"Folder {chapter_save_path} already downloaded, skipping...")
                 continue
 
         Path(chapter_save_path).mkdir(exist_ok=True)
         print(f"Created folder {chapter_save_path}")
 
-        process_pool = []
-        for image_url in image_urls:
-            p = multiprocessing.Process(target=download_image, args=(image_url, chapter_save_path))
-            p.start()
-            
-            process_pool.append(p)
+        driver.get(BASE_URL + chapter[0])
 
-        [p.join() for p in process_pool]
+        # Downloading actual images
+        imgs = driver.find_elements(By.CSS_SELECTOR, "div.container-chapter-reader img")
+        for i in range(0, len(imgs)):
+            with open(f"{chapter_save_path}/{i}.png", 'wb') as output_file:
+                output_file.write(imgs[i].screenshot_as_png)
+
+    driver.close()
+

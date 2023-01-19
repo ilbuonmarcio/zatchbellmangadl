@@ -13,3 +13,6 @@ vcruntime140.dll
 vulkan-1.dll
 waifu2x-ncnn-vulkan-fp16p.exe
 waifu2x-ncnn-vulkan.exe
+geckodriver
+geckodriver.log
+.DS_Store
