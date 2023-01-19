@@ -63,6 +63,7 @@ if __name__ == "__main__":
         # Downloading actual images
         imgs = driver.find_elements(By.CSS_SELECTOR, "div.container-chapter-reader img")
         for i in range(0, len(imgs)):
+            print(f"[{i+1}/{len(imgs)}] Saving {chapter_save_path}/{i}.png to disk...")
             with open(f"{chapter_save_path}/{i}.png", 'wb') as output_file:
                 output_file.write(imgs[i].screenshot_as_png)
 
