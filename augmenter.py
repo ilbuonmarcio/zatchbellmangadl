@@ -17,8 +17,6 @@ if __name__ == "__main__":
         input_chapter_folder = 'Downloads/' + path
         output_chapter_folder = 'Augmented/' + path
 
-        print(f"Searching on {input_chapter_folder} ->")
-
         if Path(output_chapter_folder).is_dir():
             if len(os.listdir(input_chapter_folder)) == len(os.listdir(output_chapter_folder)):
                 print(f"Directory {output_chapter_folder} already augmented entirely, skipping...")
